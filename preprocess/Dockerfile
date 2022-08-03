@@ -70,8 +70,8 @@ RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-py38_4.11.0-Linu
 
 RUN conda init bash
 
-# TODO: use git clone when released
-ADD ../../ml-neuman /neuman
+RUN git clone https://github.com/apple/ml-neuman.git &&\
+    mv ml-neuman neuman
 
 RUN cd /neuman/preprocess  && \
     git clone --recurse-submodules https://github.com/compphoto/BoostingMonocularDepth.git && \
