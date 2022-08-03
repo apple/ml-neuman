@@ -71,7 +71,7 @@ RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-py38_4.11.0-Linu
 RUN conda init bash
 
 # TODO: use git clone when released
-ADD ../../neuman /neuman
+ADD ../../ml-neuman /neuman
 
 RUN cd /neuman/preprocess  && \
     git clone --recurse-submodules https://github.com/compphoto/BoostingMonocularDepth.git && \
@@ -111,7 +111,7 @@ RUN . /root/.bashrc && \
 # detectron2 environment
 RUN . /root/.bashrc && \
     conda activate ROMP && \
-    cd /neuman/preprocess
+    cd /neuman/preprocess && \
     python -m pip install -e detectron2 && \
     pip install setuptools==59.5.0
 
