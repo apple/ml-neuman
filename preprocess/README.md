@@ -13,8 +13,10 @@ Our preprocessing pipeline uses [COLMAP](https://colmap.github.io), [Detectron2]
    To virtualize the GPUs, we need to install [nvidia-docker](https://github.com/NVIDIA/nvidia-docker).
 
    ```sh
-   docker run --runtime=nvidia -e NVIDIA_VISIBLE_DEVICES=all -ti -v /path/to/data_folder:/data --entrypoint bash neuman
+   docker run --runtime=nvidia -e NVIDIA_VISIBLE_DEVICES=all -ti -v /path/to/data_folder:/data -v /path/to/smplx:/neuman/data/smplx --entrypoint bash neuman
    ```
+
+   Notice that we mount two folders to the Docker container: `/path/to/data_folder` is the path to the video folder on the host system, and `/path/to/smplx` is the path to `smplx` folder on the host system(for more details, see Demo section [here](../README.md))
 
 - Preprocess inside the container:
 

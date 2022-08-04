@@ -126,7 +126,7 @@ def main():
     commands.append(f'echo ========================================')
     commands.append(f'cd {os.path.join(code_dir, "ROMP")}')
     if not os.path.exists(os.path.join(code_dir, 'ROMP/model_data')):
-        commands.append('wget https://github.com/Arthur151/ROMP/releases/download/v1.1/model_data.zip')
+        commands.append('wget https://github.com/jiangwei221/ROMP/releases/download/v1.1/model_data.zip')
         commands.append('unzip model_data.zip')
     if not os.path.exists(os.path.join(code_dir, 'ROMP/model_data')):
         commands.append('wget https://github.com/Arthur151/ROMP/releases/download/v1.1/trained_models_try.zip')
@@ -144,7 +144,7 @@ def main():
     commands.append(f'cd {code_dir}')
     if not os.path.isfile(os.path.join(video_dir, f'{video_name}/output/alignments.npy')):
         commands.append('conda activate neuman_env')
-        commands.append(f'python export_alignment.py --scene_dir {os.path.join(video_dir, f"{video_name}/output/sparse")} --images_dir {os.path.join(video_dir, f"{video_name}/output/images")} --raw_smpl {os.path.join(video_dir, f"{video_name}/output/smpl_pred")} --smpl_estimator="romp" --visual_check=no')
+        commands.append(f'python export_alignment.py --scene_dir {os.path.join(video_dir, f"{video_name}/output/sparse")} --images_dir {os.path.join(video_dir, f"{video_name}/output/images")} --raw_smpl {os.path.join(video_dir, f"{video_name}/output/smpl_pred")} --smpl_estimator="romp"')
         commands.append('conda deactivate')
     commands.append(f'cd {code_dir}')
 
