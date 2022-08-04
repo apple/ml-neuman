@@ -41,7 +41,7 @@ Our preprocessing pipeline uses [COLMAP](https://colmap.github.io), [Detectron2]
       <img src="../resources/smpl_overlay_example.png" height="200">
    </p>
 
-   2. Check scene and SMPL mesh alignment, run: `python draw_scene.py --scene_dir path/to/output` to visualize both, please make sure the camera trajectory looks reasonable, and the feet of SMPL meshes are touching the ground plane.
+   2. Check scene and SMPL mesh alignment, run: `python visualize_scene.py --scene_dir path/to/output` to visualize both, please make sure the camera trajectory looks reasonable, and the feet of SMPL meshes are touching the ground plane.
    *Example scene and SMPL mesh alignment*:
     <p align="center">
       <img src="../resources/alignment_example.png" height="200">
