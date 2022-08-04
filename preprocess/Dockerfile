@@ -70,8 +70,8 @@ RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-py38_4.11.0-Linu
 
 RUN conda init bash
 
-# TODO: use git clone when released
-ADD ../../neuman /neuman
+RUN git clone https://github.com/apple/ml-neuman.git &&\
+    mv ml-neuman neuman
 
 RUN cd /neuman/preprocess  && \
     git clone --recurse-submodules https://github.com/compphoto/BoostingMonocularDepth.git && \
@@ -111,7 +111,7 @@ RUN . /root/.bashrc && \
 # detectron2 environment
 RUN . /root/.bashrc && \
     conda activate ROMP && \
-    cd /neuman/preprocess
+    cd /neuman/preprocess && \
     python -m pip install -e detectron2 && \
     pip install setuptools==59.5.0
 
@@ -120,7 +120,7 @@ RUN . /root/.bashrc && \
     conda create -n open-mmlab python=3.7 -y && \
     conda activate open-mmlab && \
     conda install pytorch==1.8.0 torchvision==0.9.0 cudatoolkit=10.2 -c pytorch && \
-    pip install mmcv-full -f https://download.openmmlab.com/mmcv/dist/cu102/torch1.8.0/index.html && \
+    pip install mmcv-full https://download.openmmlab.com/mmcv/dist/cu102/torch1.8.0/mmcv_full-1.5.0-cp37-cp37m-manylinux1_x86_64.whl && \
     cd /neuman/preprocess/mmpose && \
     pip install -r requirements.txt && \
     pip install -v -e . && \
