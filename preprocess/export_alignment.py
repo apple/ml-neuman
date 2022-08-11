@@ -100,28 +100,30 @@ def solve_translation(p3d, p2d, mvp):
 
 
 def solve_scale(joints_world, cap, plane_model):
-    joint_cam = (ray_utils.to_homogeneous(joints_world) @ cap.cam_pose.world_to_camera.T)[:, :3]
-    T = cap.cam_pose.camera_to_world_3x4.T
-    T00 = T[0, 0]
-    T01 = T[0, 1]
-    T02 = T[0, 2]
-    T10 = T[1, 0]
-    T11 = T[1, 1]
-    T12 = T[1, 2]
-    T20 = T[2, 0]
-    T21 = T[2, 1]
-    T22 = T[2, 2]
-    T30 = T[3, 0]
-    T31 = T[3, 1]
-    T32 = T[3, 2]
+    cam_center = cap.cam_pose.camera_center_in_world
     a, b, c, d = plane_model
     scales = []
-    for j in joint_cam:
+    for j in joints_world:
         jx, jy, jz = j
-        right = 0 - d - c*T32 - b*T31 - a*T30
-        coe = a*(jx*T00+jy*T10+jz*T20) + b*(jx*T01+jy*T11+jz*T21) + c*(jx*T01+jy*T12+jz*T22)
-        if right/coe > 0:
-            scales.append(right/coe)
+        # from open3d plane model is: a*x + b*y + c*z + d = 0
+        # and a^2 + b^2 + c^2 = 1
+        # We can convert the scale problem into a ray-plane intersection problem:
+        # reference: https://education.siggraph.org/static/HyperGraph/raytrace/rayplane_intersection.htm
+        # Shoting a ray from camera center, (c_x, c_y, c_z), passing through joint, (j_x, j_y, j_z), and
+        # Intersecting the plane, a*x + b*y + c*z + d = 0, at some point (x, y, z)
+        # Let R0 = (c_x, c_y, c_z)
+        #     Rd = (j_x-c_x, j_y-c_y, j_z-c_z)
+        # The ray can be written as: R(s) = R0 + s * Rd
+        # with the plane equation:
+        # a*(c_x + s*(j_x-c_x)) + b*(c_y + s*(j_y-c_y)) + c*(c_z + s*(j_z-c_z)) + d = 0
+        # s = -(a*c_x + b*c_y + c*c_z + d) / (a*(j_x-c_x) + b*(j_y-c_y) + c*(j_z-c_z))
+        # let right = -(a*c_x + b*c_y + c*c_z + d)
+        #       coe = a*(j_x-c_x) + b*(j_y-c_y) + c*(j_z-c_z)
+        right = -(a*cam_center[0] + b*cam_center[1] + c*cam_center[2] + d)
+        coe = a*(jx-cam_center[0]) + b*(jy-cam_center[1]) + c*(jz-cam_center[2])
+        s = right / coe
+        if s > 0:
+            scales.append(s)
     return min(scales)
 
 
