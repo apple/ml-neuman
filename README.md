@@ -38,6 +38,8 @@ Alternately, you can create the environment by executing:
 conda create -n neuman_env python=3.7 -y;
 conda activate neuman_env;
 conda install pytorch==1.8.0 torchvision==0.9.0 cudatoolkit=10.2 -c pytorch;
+# For RTX 30 series GPU with CUDA version 11.x, please use:
+# conda install pytorch==1.8.0 torchvision==0.9.0 torchaudio==0.8.0 cudatoolkit=11.1 -c pytorch -c conda-forge
 conda install -c fvcore -c iopath -c conda-forge fvcore iopath;
 conda install -c bottler nvidiacub;
 conda install pytorch3d -c pytorch3d;
