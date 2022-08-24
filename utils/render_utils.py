@@ -214,7 +214,7 @@ def render_smpl_nerf(net, cap, posed_verts, faces, Ts, rays_per_batch=32768, sam
                 _b, _n, _ = _pts.shape
                 if not tpose:
                     can_pts, can_dirs, _ = ray_utils.warp_samples_to_canonical(
-                        _pts.cpu().numpy().reshape(-1, 3),
+                        _pts.cpu().numpy(),
                         posed_verts.cpu().numpy(),
                         faces,
                         Ts
@@ -328,7 +328,7 @@ def render_hybrid_nerf(net, cap, posed_verts, faces, Ts, rays_per_batch=32768, s
                 human_pts, human_dirs, human_z_vals = ray_utils.ray_to_samples(human_ray_batch, samples_per_ray, device=device)
                 _b, _n, _ = human_pts.shape
                 can_pts, can_dirs, _ = ray_utils.warp_samples_to_canonical(
-                    human_pts.cpu().numpy().reshape(-1, 3),
+                    human_pts.cpu().numpy(),
                     posed_verts,
                     faces,
                     Ts
@@ -443,7 +443,7 @@ def render_hybrid_nerf_multi_persons(bkg_model, cap, human_models, posed_verts, 
                     human_pts, human_dirs, human_z_vals = ray_utils.ray_to_samples(human_ray_batch, samples_per_ray, device=device)
                     _b, _n, _ = human_pts.shape
                     can_pts, can_dirs, _ = ray_utils.warp_samples_to_canonical(
-                        human_pts.cpu().numpy().reshape(-1, 3),
+                        human_pts.cpu().numpy(),
                         _posed_verts,
                         _faces,
                         _Ts

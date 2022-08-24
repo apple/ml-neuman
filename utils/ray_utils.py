@@ -46,15 +46,28 @@ def to_homogeneous(pts):
 
 
 def warp_samples_to_canonical(pts, verts, faces, T):
+    assert len(pts.shape) in [2, 3]
+    assert pts.shape[-1] == 3
+    multi_rays = True if len(pts.shape) == 3 else False
+    if multi_rays:
+        num_rays, num_samples, _ = pts.shape
+        pts = pts.reshape(-1, 3)
     dist2, f_id, closest = igl.point_mesh_squared_distance(pts, verts, faces[:, :3])
     closest_tri = verts[faces[:, :3][f_id]]
     barycentric = igl.barycentric_coordinates_tri(closest, closest_tri[:, 0, :].copy(), closest_tri[:, 1, :].copy(), closest_tri[:, 2, :].copy())
     T_interp = (T[faces[:, :3][f_id]] * barycentric[..., None, None]).sum(axis=1)
     T_interp_inv = np.linalg.inv(T_interp)
     new_pts = (T_interp_inv @ to_homogeneous(pts)[..., None])[:, :3, 0]
-    new_dirs = new_pts[1:] - new_pts[:-1]
-    new_dirs = np.concatenate([new_dirs, new_dirs[-1:]])
-    new_dirs = new_dirs / np.linalg.norm(new_dirs, axis=1, keepdims=True)
+    if multi_rays:
+        new_pts = new_pts.reshape(num_rays, num_samples, 3)
+        closest = closest.reshape(num_rays, num_samples, 3)
+        new_dirs = new_pts[:, 1:] - new_pts[:, :-1]
+        new_dirs = np.concatenate([new_dirs, new_dirs[:, -1:]], axis=1)
+        new_dirs = new_dirs / np.linalg.norm(new_dirs, axis=2, keepdims=True)
+    else:
+        new_dirs = new_pts[1:] - new_pts[:-1]
+        new_dirs = np.concatenate([new_dirs, new_dirs[-1:]])
+        new_dirs = new_dirs / np.linalg.norm(new_dirs, axis=1, keepdims=True)
 
     return new_pts, new_dirs, closest
 
