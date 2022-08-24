@@ -161,7 +161,7 @@ def render_vanilla(coarse_net, cap, fine_net=None, rays_per_batch=32768, samples
     return total_rgb_map
 
 
-def render_smpl_nerf(net, cap, posed_verts, faces, Ts, rays_per_batch=32768, samples_per_ray=64, white_bkg=True, tpose=False, geo_threshold=DEFAULT_GEO_THRESH, return_depth=False, return_mask=False, use_offset=False, time_f=0.0, interval_comp=1.0):
+def render_smpl_nerf(net, cap, posed_verts, faces, Ts, rays_per_batch=32768, samples_per_ray=64, white_bkg=True, render_can=False, geo_threshold=DEFAULT_GEO_THRESH, return_depth=False, return_mask=False, interval_comp=1.0):
     device = next(net.parameters()).device
 
     def build_batch(origins, dirs, near, far):
@@ -211,28 +211,20 @@ def render_smpl_nerf(net, cap, posed_verts, faces, Ts, rays_per_batch=32768, sam
                     temp_far[temp_near < temp_far]
                 )
                 _pts, _dirs, _z_vals = ray_utils.ray_to_samples(ray_batch, samples_per_ray, device=device)
-                _b, _n, _ = _pts.shape
-                if not tpose:
+                if render_can:
+                    can_pts = _pts
+                    can_dirs = _dirs
+                else:
                     can_pts, can_dirs, _ = ray_utils.warp_samples_to_canonical(
-                        _pts.cpu().numpy().reshape(-1, 3),
+                        _pts.cpu().numpy(),
                         posed_verts.cpu().numpy(),
                         faces,
                         Ts
                     )
                     can_pts = torch.from_numpy(can_pts)
-                    can_dirs = torch.from_numpy(can_dirs)
-                else:
-                    can_pts = _pts
-                    can_dirs = _dirs
-                if use_offset:
-                    cur_time = torch.ones_like(_pts[..., 0:1]).to(device) * time_f
-                    offset = random.choice(net.offset_nets)(torch.cat([_pts, cur_time], dim=-1))
-                    can_pts += offset
-                    can_dirs = can_pts[1:] - can_pts[:-1]
-                    can_dirs = torch.cat([can_dirs, can_dirs[-1:]])
-                    can_dirs = can_dirs / torch.norm(can_dirs, dim=1, keepdim=True)
-                can_pts = (can_pts.reshape(_b, _n, 3)).to(device).float()
-                can_dirs = (can_dirs.reshape(_b, _n, 3)).to(device).float()
+                    can_dirs = torch.from_numpy(can_dirs) 
+                can_pts = can_pts.to(device).float()
+                can_dirs = can_dirs.to(device).float()
                 out = net.coarse_human_net(can_pts, can_dirs)
                 out[..., -1] *= interval_comp
                 _rgb_map, _, _acc_map, _, _depth_map = raw2outputs(out, _z_vals, _dirs[:, 0, :], white_bkg=white_bkg)
@@ -254,7 +246,7 @@ def render_smpl_nerf(net, cap, posed_verts, faces, Ts, rays_per_batch=32768, sam
     return total_rgb_map
 
 
-def render_hybrid_nerf(net, cap, posed_verts, faces, Ts, rays_per_batch=32768, samples_per_ray=64, importance_samples_per_ray=128, white_bkg=True, geo_threshold=DEFAULT_GEO_THRESH, return_depth=False, use_offset=False, time_f=0.0):
+def render_hybrid_nerf(net, cap, posed_verts, faces, Ts, rays_per_batch=32768, samples_per_ray=64, importance_samples_per_ray=128, white_bkg=True, geo_threshold=DEFAULT_GEO_THRESH, return_depth=False):
     device = next(net.parameters()).device
 
     def build_batch(origins, dirs, near, far):
@@ -326,22 +318,14 @@ def render_hybrid_nerf(net, cap, posed_verts, faces, Ts, rays_per_batch=32768, s
                     temp_far[temp_near < temp_far]
                 )
                 human_pts, human_dirs, human_z_vals = ray_utils.ray_to_samples(human_ray_batch, samples_per_ray, device=device)
-                _b, _n, _ = human_pts.shape
                 can_pts, can_dirs, _ = ray_utils.warp_samples_to_canonical(
-                    human_pts.cpu().numpy().reshape(-1, 3),
+                    human_pts.cpu().numpy(),
                     posed_verts,
                     faces,
                     Ts
                 )
-                can_pts = torch.from_numpy(can_pts.reshape(_b, _n, 3)).to(device).float()
-                can_dirs = torch.from_numpy(can_dirs.reshape(_b, _n, 3)).to(device).float()
-                if use_offset:
-                    cur_time = torch.ones_like(human_pts[..., 0:1]).to(device) * time_f
-                    offset = random.choice(net.offset_nets)(torch.cat([human_pts, cur_time], dim=-1))
-                    can_pts += offset
-                    can_dirs = can_pts[1:] - can_pts[:-1]
-                    can_dirs = torch.cat([can_dirs, can_dirs[-1:]])
-                    can_dirs = can_dirs / torch.norm(can_dirs, dim=1, keepdim=True)
+                can_pts = torch.from_numpy(can_pts).to(device).float()
+                can_dirs = torch.from_numpy(can_dirs).to(device).float()
                 human_out = net.coarse_human_net(can_pts, can_dirs)
                 coarse_total_zvals, coarse_order = torch.sort(torch.cat([bkg_z_vals[temp_near < temp_far], human_z_vals], -1), -1)
                 coarse_total_out = torch.cat([bkg_out[temp_near < temp_far], human_out], 1)
@@ -441,15 +425,14 @@ def render_hybrid_nerf_multi_persons(bkg_model, cap, human_models, posed_verts, 
                         temp_far[temp_near < temp_far]
                     )
                     human_pts, human_dirs, human_z_vals = ray_utils.ray_to_samples(human_ray_batch, samples_per_ray, device=device)
-                    _b, _n, _ = human_pts.shape
                     can_pts, can_dirs, _ = ray_utils.warp_samples_to_canonical(
-                        human_pts.cpu().numpy().reshape(-1, 3),
+                        human_pts.cpu().numpy(),
                         _posed_verts,
                         _faces,
                         _Ts
                     )
-                    can_pts = torch.from_numpy(can_pts.reshape(_b, _n, 3)).to(device).float()
-                    can_dirs = torch.from_numpy(can_dirs.reshape(_b, _n, 3)).to(device).float()
+                    can_pts = torch.from_numpy(can_pts).to(device).float()
+                    can_dirs = torch.from_numpy(can_dirs).to(device).float()
                     human_out = _net.coarse_human_net(can_pts, can_dirs)
                     empty_human_out[temp_near < temp_far] = human_out
                     empty_human_z_vals[temp_near < temp_far] = human_z_vals

@@ -7,7 +7,7 @@ import torch
 import igl
 
 from geometry.pcd_projector import PointCloudProjectorNp
-from utils.constant import DEFAULT_GEO_THRESH
+from utils.constant import DEFAULT_GEO_THRESH, PERTURB_EPSILON
 
 
 def shot_ray(cap, x, y):
@@ -30,9 +30,6 @@ def shot_rays(cap, xys):
 
 
 def shot_all_rays(cap):
-    '''
-    set flip to True when use pretrained weights
-    '''
     c2w = cap.cam_pose.camera_to_world
     temp_pcd = PointCloudProjectorNp.img_to_pcd_3d(np.ones(cap.size), cap.intrinsic_matrix, img=None, cam2world=c2w)
     dirs = temp_pcd - cap.cam_pose.camera_center_in_world
@@ -48,24 +45,25 @@ def to_homogeneous(pts):
         return np.concatenate([pts, np.ones_like(pts[..., 0:1])], axis=-1)
 
 
-def warp_samples_to_canonical(pts, verts, faces, T, return_T=False, dist2=None, f_id=None, closest=None, out_cuda=False):
-    if dist2 is None:
-        dist2, f_id, closest = igl.point_mesh_squared_distance(pts, verts, faces[:, :3])
+def warp_samples_to_canonical(pts, verts, faces, T):
+    assert len(pts.shape) == 3, 'pts should have shape [num_rays, num_samples, 3]'
+    assert pts.shape[-1] == 3
+    num_rays, num_samples, _ = pts.shape
+    pts = pts.reshape(-1, 3)
+    dist2, f_id, closest = igl.point_mesh_squared_distance(pts, verts, faces[:, :3])
     closest_tri = verts[faces[:, :3][f_id]]
     barycentric = igl.barycentric_coordinates_tri(closest, closest_tri[:, 0, :].copy(), closest_tri[:, 1, :].copy(), closest_tri[:, 2, :].copy())
     T_interp = (T[faces[:, :3][f_id]] * barycentric[..., None, None]).sum(axis=1)
-    if out_cuda:
-        T_interp_inv = torch.inverse(torch.from_numpy(T_interp).float().to('cuda'))
-    else:
-        T_interp_inv = np.linalg.inv(T_interp)
-    if return_T:
-        return T_interp_inv, f_id, dist2
-    new_pts = (T_interp_inv @ to_homogeneous(pts)[..., None])[:, :3, 0]
-    new_dirs = new_pts[1:] - new_pts[:-1]
-    new_dirs = np.concatenate([new_dirs, new_dirs[-1:]])
-    new_dirs = new_dirs / np.linalg.norm(new_dirs, axis=1, keepdims=True)
+    T_interp_inv = np.linalg.inv(T_interp)
+    can_pts = (T_interp_inv @ to_homogeneous(pts)[..., None])[:, :3, 0]
+    # reshape back and compute ray directions in canonical space
+    can_pts = can_pts.reshape(num_rays, num_samples, 3)
+    closest = closest.reshape(num_rays, num_samples, 3)
+    can_dirs = can_pts[:, 1:] - can_pts[:, :-1]
+    can_dirs = np.concatenate([can_dirs, can_dirs[:, -1:]], axis=1)
+    can_dirs = can_dirs / np.linalg.norm(can_dirs, axis=2, keepdims=True)
 
-    return new_pts, new_dirs, closest
+    return can_pts, can_dirs, closest
 
 
 def warp_samples_to_canonical_diff(pts, verts, faces, T):
@@ -122,7 +120,11 @@ def ray_to_samples(ray_batch,
         upper = torch.cat([mids, z_vals[..., -1:]], -1)
         lower = torch.cat([z_vals[..., :1], mids], -1)
         # stratified samples in those intervals
-        t_rand = torch.rand(z_vals.shape, device=device)
+        t_rand = torch.clip(
+            torch.rand(z_vals.shape, device=device),
+            min=PERTURB_EPSILON,
+            max=1-PERTURB_EPSILON
+        )
 
         z_vals = lower + (upper - lower) * t_rand
 

@@ -10,15 +10,6 @@ import numpy as np
 import torch
 
 
-def transform_points(points, transformation):
-    append_ones = np.ones_like(points[:, 0:1])
-    xyzw = np.concatenate([points, append_ones], axis=1)
-    xyzw = np.matmul(transformation, xyzw.T).T
-    xyzw /= xyzw[:, 3:4]
-    points = xyzw[:, 0:3]
-    return points
-
-
 def project_point_cloud_at_capture(point_cloud, capture, render_type='rgb'):
     if render_type == 'rgb':
         assert point_cloud.shape[1] == 6

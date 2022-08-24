@@ -95,12 +95,18 @@ conda activate neuman_env
 
 - Render using pretrained model
 
-  Render 360 views of a human:
+  Render 360 views of a canonical human:
       
   ```sh
   python render_360.py --scene_dir ./data/bike --weights_path ./out/bike_human/checkpoint.pth.tar --mode canonical_360
   ```
      
+  Render 360 views of a posed human:
+      
+  ```sh
+  python render_360.py --scene_dir ./data/bike --weights_path ./out/bike_human/checkpoint.pth.tar --mode posed_360
+  ```
+
   Render test views of a sequence, and evaluate the metrics:
      
   ```sh
