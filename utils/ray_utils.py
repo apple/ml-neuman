@@ -30,9 +30,6 @@ def shot_rays(cap, xys):
 
 
 def shot_all_rays(cap):
-    '''
-    set flip to True when use pretrained weights
-    '''
     c2w = cap.cam_pose.camera_to_world
     temp_pcd = PointCloudProjectorNp.img_to_pcd_3d(np.ones(cap.size), cap.intrinsic_matrix, img=None, cam2world=c2w)
     dirs = temp_pcd - cap.cam_pose.camera_center_in_world
@@ -48,18 +45,12 @@ def to_homogeneous(pts):
         return np.concatenate([pts, np.ones_like(pts[..., 0:1])], axis=-1)
 
 
-def warp_samples_to_canonical(pts, verts, faces, T, return_T=False, dist2=None, f_id=None, closest=None, out_cuda=False):
-    if dist2 is None:
-        dist2, f_id, closest = igl.point_mesh_squared_distance(pts, verts, faces[:, :3])
+def warp_samples_to_canonical(pts, verts, faces, T):
+    dist2, f_id, closest = igl.point_mesh_squared_distance(pts, verts, faces[:, :3])
     closest_tri = verts[faces[:, :3][f_id]]
     barycentric = igl.barycentric_coordinates_tri(closest, closest_tri[:, 0, :].copy(), closest_tri[:, 1, :].copy(), closest_tri[:, 2, :].copy())
     T_interp = (T[faces[:, :3][f_id]] * barycentric[..., None, None]).sum(axis=1)
-    if out_cuda:
-        T_interp_inv = torch.inverse(torch.from_numpy(T_interp).float().to('cuda'))
-    else:
-        T_interp_inv = np.linalg.inv(T_interp)
-    if return_T:
-        return T_interp_inv, f_id, dist2
+    T_interp_inv = np.linalg.inv(T_interp)
     new_pts = (T_interp_inv @ to_homogeneous(pts)[..., None])[:, :3, 0]
     new_dirs = new_pts[1:] - new_pts[:-1]
     new_dirs = np.concatenate([new_dirs, new_dirs[-1:]])
