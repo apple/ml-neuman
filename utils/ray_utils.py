@@ -7,7 +7,7 @@ import torch
 import igl
 
 from geometry.pcd_projector import PointCloudProjectorNp
-from utils.constant import DEFAULT_GEO_THRESH
+from utils.constant import DEFAULT_GEO_THRESH, PERTURB_EPSILON
 
 
 def shot_ray(cap, x, y):
@@ -122,7 +122,11 @@ def ray_to_samples(ray_batch,
         upper = torch.cat([mids, z_vals[..., -1:]], -1)
         lower = torch.cat([z_vals[..., :1], mids], -1)
         # stratified samples in those intervals
-        t_rand = torch.rand(z_vals.shape, device=device)
+        t_rand = torch.clip(
+            torch.rand(z_vals.shape, device=device),
+            min=PERTURB_EPSILON,
+            max=1-PERTURB_EPSILON
+        )
 
         z_vals = lower + (upper - lower) * t_rand
 
