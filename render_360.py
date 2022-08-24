@@ -69,7 +69,7 @@ def main_canonical_360(opt):
             Ts=None,
             rays_per_batch=opt.rays_per_batch,
             samples_per_ray=opt.samples_per_ray,
-            tpose=True,
+            render_can=True,
             return_mask=False,
             return_depth=False,
             interval_comp=opt.geo_threshold / np.mean(can_bones)
@@ -119,7 +119,7 @@ def main_posed_360(opt):
             rays_per_batch=opt.rays_per_batch,
             samples_per_ray=opt.samples_per_ray,
             white_bkg=opt.white_bkg,
-            tpose=False,
+            render_can=False,
             geo_threshold=opt.geo_threshold
         )
         save_path = os.path.join('./demo', f'posed_360/{os.path.basename(opt.scene_dir)}', f'out_{str(i).zfill(4)}.png')

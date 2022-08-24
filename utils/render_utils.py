@@ -161,7 +161,7 @@ def render_vanilla(coarse_net, cap, fine_net=None, rays_per_batch=32768, samples
     return total_rgb_map
 
 
-def render_smpl_nerf(net, cap, posed_verts, faces, Ts, rays_per_batch=32768, samples_per_ray=64, white_bkg=True, tpose=False, geo_threshold=DEFAULT_GEO_THRESH, return_depth=False, return_mask=False, interval_comp=1.0):
+def render_smpl_nerf(net, cap, posed_verts, faces, Ts, rays_per_batch=32768, samples_per_ray=64, white_bkg=True, render_can=False, geo_threshold=DEFAULT_GEO_THRESH, return_depth=False, return_mask=False, interval_comp=1.0):
     device = next(net.parameters()).device
 
     def build_batch(origins, dirs, near, far):
@@ -212,7 +212,10 @@ def render_smpl_nerf(net, cap, posed_verts, faces, Ts, rays_per_batch=32768, sam
                 )
                 _pts, _dirs, _z_vals = ray_utils.ray_to_samples(ray_batch, samples_per_ray, device=device)
                 _b, _n, _ = _pts.shape
-                if not tpose:
+                if render_can:
+                    can_pts = _pts
+                    can_dirs = _dirs
+                else:
                     can_pts, can_dirs, _ = ray_utils.warp_samples_to_canonical(
                         _pts.cpu().numpy(),
                         posed_verts.cpu().numpy(),
@@ -220,10 +223,7 @@ def render_smpl_nerf(net, cap, posed_verts, faces, Ts, rays_per_batch=32768, sam
                         Ts
                     )
                     can_pts = torch.from_numpy(can_pts)
-                    can_dirs = torch.from_numpy(can_dirs)
-                else:
-                    can_pts = _pts
-                    can_dirs = _dirs
+                    can_dirs = torch.from_numpy(can_dirs) 
                 can_pts = (can_pts.reshape(_b, _n, 3)).to(device).float()
                 can_dirs = (can_dirs.reshape(_b, _n, 3)).to(device).float()
                 out = net.coarse_human_net(can_pts, can_dirs)

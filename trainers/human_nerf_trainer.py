@@ -493,7 +493,7 @@ class HumanNeRFTrainer():
             rays_per_batch=self.opt.rays_per_batch,
             samples_per_ray=self.opt.samples_per_ray,
             white_bkg=True,
-            tpose=True,
+            render_can=True,
             return_mask=True,
             return_depth=True,
             interval_comp=self.interval_comp
