@@ -269,13 +269,11 @@ class HumanNeRFTrainer():
             faces=self.val_dataset.scene.captures[batch['cap_id']].posed_mesh_cpu.faces_packed().numpy(),
             T=raw_Ts[0]
         )
-        can_pts = (Ts @ ray_utils.to_homogeneous(human_pts)[..., None])[:, :3, 0]
-        can_pts += offset.reshape(-1, 3)
-        can_dirs = can_pts[1:] - can_pts[:-1]
-        can_dirs = torch.cat([can_dirs, can_dirs[-1:]])
-        can_dirs = can_dirs / torch.norm(can_dirs, dim=1, keepdim=True)
-        can_pts = can_pts.reshape(human_b, human_n, 3)
-        can_dirs = can_dirs.reshape(human_b, human_n, 3)
+        can_pts = (Ts @ ray_utils.to_homogeneous(human_pts)[..., None])[:, :3, 0].reshape(human_b, human_n, 3)
+        can_pts += offset
+        can_dirs = can_pts[:, 1:] - can_pts[:, :-1]
+        can_dirs = torch.cat([can_dirs, can_dirs[:, -1:]], dim=1)
+        can_dirs = can_dirs / torch.norm(can_dirs, dim=2, keepdim=True)
         human_out = self.net.coarse_human_net(can_pts, can_dirs)
         return human_pts, human_dirs, human_z_vals, can_pts, can_dirs, human_out
 
