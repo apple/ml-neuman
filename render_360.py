@@ -7,8 +7,8 @@ Render 360 views of a Da-posed human.
 Render 360 views of a posed human.
 
 Examples:
-python render_360.py --scene_dir ./data/seattle2 --use_cuda=no --white_bkg=yes --rays_per_batch=2048 --trajectory_resolution=40 --weights_path ./out/seattle2_rotate/checkpoint.pth.tar --render_h=72 --render_w=128 --mode canonical_360 --can_posenc rotate
-python render_360.py --scene_dir ./data/seattle2 --use_cuda=no --white_bkg=yes --rays_per_batch=2048 --trajectory_resolution=40 --weights_path ./out/seattle2_rotate/checkpoint.pth.tar --render_h=72 --render_w=128 --mode posed_360 --can_posenc rotate
+python render_360.py --scene_dir ./data/seattle --use_cuda=no --white_bkg=yes --rays_per_batch=2048 --trajectory_resolution=40 --weights_path ./out/seattle_human/checkpoint.pth.tar --render_h=72 --render_w=128 --mode canonical_360 --can_posenc rotate
+python render_360.py --scene_dir ./data/seattle --use_cuda=no --white_bkg=yes --rays_per_batch=2048 --trajectory_resolution=40 --weights_path ./out/seattle_human/checkpoint.pth.tar --render_h=72 --render_w=128 --mode posed_360 --can_posenc rotate
 '''
 import os
 import argparse

@@ -34,7 +34,7 @@ ACTOR_WEIGHTS_DICT = {
 
 def read_novel_caps(opt, num_caps, scene):
     novel_caps = []
-    if os.path.basename(opt.scene_dir) == 'seattle2' and opt.motion_name == 'dance_together':
+    if os.path.basename(opt.scene_dir) == 'seattle' and opt.motion_name == 'dance_together':
         for i in range(num_caps):
             cap = copy.deepcopy(scene.captures[20])
             ellipse_a = 0.15
@@ -55,11 +55,11 @@ def get_mocap_path(motion_name, actor_name=None):
 
 def get_manual_alignment(motion_name, actor_name):
     if motion_name == 'dance_together':
-        if actor_name == 'seattle2':
+        if actor_name == 'seattle':
             manual_trans = np.array([0, 0.15, 0.77])
             manual_rot = np.array([90.4, -10.9, 4]) / 180 * np.pi
             manual_scale = 0.2
-        if actor_name == 'citron2':
+        if actor_name == 'citron':
             manual_trans = np.array([-0.36, 0.13, 0.92])
             manual_rot = np.array([90, -9.4, 4]) / 180 * np.pi
             manual_scale = 0.2
