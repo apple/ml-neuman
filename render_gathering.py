@@ -25,16 +25,16 @@ from options import options
 from models.smpl import SMPL
 
 
-WEIGHTS_DICT = {
-    'seattle2': 'seattle2_rotate',
-    'citron2': 'citron2_rotate',
-    'parkinglot': 'parkinglot_rotate',
+ACTOR_WEIGHTS_DICT = {
+    'seattle': 'seattle_human',
+    'citron': 'citron_human',
+    'parkinglot': 'parkinglot_human',
 }
 
 
 def read_novel_caps(opt, num_caps, scene):
     novel_caps = []
-    if os.path.basename(opt.scene_dir) == 'seattle2' and opt.motion_name == 'dance_together':
+    if os.path.basename(opt.scene_dir) == 'seattle' and opt.motion_name == 'dance_together':
         for i in range(num_caps):
             cap = copy.deepcopy(scene.captures[20])
             ellipse_a = 0.15
@@ -55,11 +55,11 @@ def get_mocap_path(motion_name, actor_name=None):
 
 def get_manual_alignment(motion_name, actor_name):
     if motion_name == 'dance_together':
-        if actor_name == 'seattle2':
+        if actor_name == 'seattle':
             manual_trans = np.array([0, 0.15, 0.77])
             manual_rot = np.array([90.4, -10.9, 4]) / 180 * np.pi
             manual_scale = 0.2
-        if actor_name == 'citron2':
+        if actor_name == 'citron':
             manual_trans = np.array([-0.36, 0.13, 0.92])
             manual_rot = np.array([90, -9.4, 4]) / 180 * np.pi
             manual_scale = 0.2
@@ -77,7 +77,7 @@ def get_manual_alignment(motion_name, actor_name):
 def read_actor(opt, actor_name):
     # read network
     net = human_nerf.HumanNeRF(opt)
-    weights = torch.load(f'./out/{WEIGHTS_DICT[actor_name]}/checkpoint.pth.tar', map_location='cpu')
+    weights = torch.load(f'./out/{ACTOR_WEIGHTS_DICT[actor_name]}/checkpoint.pth.tar', map_location='cpu')
     utils.safe_load_weights(net, weights['hybrid_model_state_dict'])
 
     # read mocap data(already in SMPL format)
@@ -224,7 +224,7 @@ if __name__ == "__main__":
     parser.add_argument('--num_offset_nets', default=1, type=int, help='how many offset networks')
     parser.add_argument('--offset_scale_type', default='linear', type=str, help='no/linear/tanh')
     parser.add_argument('--motion_name', default='dance_together', type=str, help='')
-    parser.add_argument('--actors', nargs="*", type=str, default=['seattle2', 'citron2', 'parkinglot'])
+    parser.add_argument('--actors', nargs="*", type=str, default=['seattle', 'citron', 'parkinglot'])
 
     opt = parser.parse_args()
 

@@ -6,7 +6,7 @@
 Draw SMPL meshes(as vertices) with the scene point cloud
 
 Example:
-python visualize_scene.py --scene_dir ./data/citron2
+python visualize_scene.py --scene_dir ./data/citron
 '''
 
 import argparse
