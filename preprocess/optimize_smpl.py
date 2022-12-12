@@ -105,8 +105,8 @@ def silhouette_renderer_from_pinhole_cam(cam, device='cpu'):
 def vertext_forward(pose, betas, align, body_model, scale):
     device = pose.device
 
-    da_smpl = torch.zeros_like(pose)
-    da_smpl = da_smpl.reshape(-1, 3)
+    T_pose = torch.zeros_like(pose)
+    T_pose = T_pose.reshape(-1, 3)
 
     _, mesh_transf = body_model.verts_transformations(
         return_tensor=True,
@@ -119,13 +119,13 @@ def vertext_forward(pose, betas, align, body_model, scale):
     s = torch.eye(4).to(mesh_transf.device)
     s[:3, :3] *= scale
     mesh_transf = s @ mesh_transf
-    da_pose_verts, da_pose_joints = body_model(return_tensor=True,
+    T_pose_verts, T_pose_joints = body_model(return_tensor=True,
                                                return_joints=True,
-                                               poses=da_smpl[None],
+                                               poses=T_pose[None],
                                                betas=betas[None],
                                                transl=torch.zeros([1, 3]).float().to(device),
                                                )
-    world_verts = torch.einsum('bni, bi->bn', mesh_transf[0], ray_utils.to_homogeneous(torch.cat([da_pose_verts, da_pose_joints], dim=0)))[:, :3]
+    world_verts = torch.einsum('bni, bi->bn', mesh_transf[0], ray_utils.to_homogeneous(torch.cat([T_pose_verts, T_pose_joints], dim=0)))[:, :3]
     world_verts, world_joints = world_verts[:6890, :][None], world_verts[6890:, :][None]
     return world_verts, world_joints
 
