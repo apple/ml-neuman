@@ -12,4 +12,4 @@ mv out/pretrained/* out/
 rm data/dataset.zip 
 rm out/pretrained.zip
 rm -r data/dataset 
-rm -r data/pretrained
+rm -r out/pretrained
