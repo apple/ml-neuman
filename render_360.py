@@ -77,6 +77,9 @@ def main_canonical_360(opt):
         save_path = os.path.join('./demo', f'canonical_360/{os.path.basename(opt.scene_dir)}', f'out_{str(i).zfill(4)}.png')
         if not os.path.isdir(os.path.dirname(save_path)):
             os.makedirs(os.path.dirname(save_path))
+        # Convert the output image array to a valid data type (e.g., uint8) and reshape if necessary
+        out = np.clip(out * 255, 0, 255).astype(np.uint8)
+        out = np.squeeze(out)  # Remove singleton dimensions if present
         imageio.imsave(save_path, out)
         print(f'image saved: {save_path}')
 
@@ -125,6 +128,9 @@ def main_posed_360(opt):
         save_path = os.path.join('./demo', f'posed_360/{os.path.basename(opt.scene_dir)}', f'out_{str(i).zfill(4)}.png')
         if not os.path.isdir(os.path.dirname(save_path)):
             os.makedirs(os.path.dirname(save_path))
+        # Convert the output image array to a valid data type (e.g., uint8) and reshape if necessary
+        out = np.clip(out * 255, 0, 255).astype(np.uint8)
+        out = np.squeeze(out)  # Remove singleton dimensions if present
         imageio.imsave(save_path, out)
         print(f'image saved: {save_path}')
 
