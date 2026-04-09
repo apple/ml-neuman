@@ -1,14 +1,11 @@
-FROM nvidia/cuda:11.3.1-cudnn8-devel-ubuntu20.04
-#FROM nvidia/cuda:11.3.1-cudnn8-devel-ubuntu20.04
-#FROM nvidia/cuda:10.2-cudnn7-devel-ubuntu18.04
-
+FROM nvidia/cuda:11.7.1-cudnn8-devel-ubuntu20.04
 # Prevent stop building ubuntu at time zone selection.  
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PATH /opt/conda/bin:$PATH
 
 # Prepare and empty machine for building
-RUN rm /etc/apt/sources.list.d/cuda.list
-#RUN rm /etc/apt/sources.list.d/nvidia-ml.list
+RUN rm -f /etc/apt/sources.list.d/cuda.list
+RUN rm -f /etc/apt/sources.list.d/nvidia-ml.list
 RUN apt-get update && apt-get install -y \
     git \
     cmake \
@@ -51,7 +48,7 @@ RUN cd ceres-solver && \
 # have problems using the environment described thus far. If you encounter
 # problems and want to install the tested release, then uncomment the branch
 # specification in the line below
-RUN git clone https://github.com/colmap/colmap.git #--branch 3.6
+RUN git clone https://github.com/colmap/colmap.git --branch 3.6
 
 RUN cd colmap && \
 	git checkout 96d4ba0b55c0d1f98c8c432420ecd6540868c398 && \
@@ -97,13 +94,7 @@ RUN cd /neuman/preprocess  && \
 
 # ROMP environment
 RUN . /root/.bashrc && \
-    conda create -n ROMP python==3.8.8 && \
-    conda activate ROMP && \
-#    conda install -c pytorch pytorch=1.9.1 torchvision=0.10.1 cudatoolkit=10.2 && \
-    conda install -c pytorch pytorch=1.11 torchvision torchaudio cudatoolkit=11.3 && \
-    conda install -c fvcore -c iopath -c conda-forge fvcore iopath && \
-    conda install -c bottler nvidiacub && \
-    conda install pytorch3d -c pytorch3d
+    conda create -n ROMP python==3.8
 
 RUN . /root/.bashrc && \
     conda activate ROMP && \
@@ -117,15 +108,26 @@ RUN . /root/.bashrc && \
     cd /neuman/preprocess && \
     python -m pip install -e detectron2 && \
     pip install setuptools==59.5.0
+    
+RUN . /root/.bashrc && \
+    conda activate ROMP && \
+    conda install pytorch-cuda=11.7 -c pytorch -c nvidia && \
+    conda install -y pytorch==1.13.1 && \
+    pip install torchvision==0.14.1 && \
+    pip install torchaudio==0.13.1 && \
+    conda install -c fvcore -c iopath -c conda-forge fvcore iopath  && \
+    conda install -c bottler nvidiacub 
+
+RUN . /root/.bashrc && \
+    conda activate ROMP && \
+    pip install --no-index --no-cache-dir pytorch3d -f https://dl.fbaipublicfiles.com/pytorch3d/packaging/wheels/py38_cu117_pyt1131/download.html
 
 # mmpose environment
 RUN . /root/.bashrc && \
     conda create -n open-mmlab python=3.7 -y && \
     conda activate open-mmlab && \
-#    conda install pytorch==1.8.0 torchvision==0.9.0 cudatoolkit=10.2 -c pytorch && \
-    conda install -c pytorch pytorch=1.11 torchvision torchaudio cudatoolkit=11.3 && \    
-#    pip install mmcv-full https://download.openmmlab.com/mmcv/dist/cu102/torch1.8.0/mmcv_full-1.5.0-cp37-cp37m-manylinux1_x86_64.whl && \
-    pip install mmcv-full -f https://download.openmmlab.com/mmcv/dist/cu113/torch1.11.0/index.html && \
+    conda install pytorch==1.8.0 torchvision==0.9.0 cudatoolkit=10.2 -c pytorch && \
+    pip install mmcv-full https://download.openmmlab.com/mmcv/dist/cu102/torch1.8.0/mmcv_full-1.5.0-cp37-cp37m-manylinux1_x86_64.whl && \
     cd /neuman/preprocess/mmpose && \
     pip install -r requirements.txt && \
     pip install -v -e . && \
@@ -134,12 +136,16 @@ RUN . /root/.bashrc && \
 
 # NeuMan environment
 RUN . /root/.bashrc && \
-    conda create -n neuman_env python=3.7 -y && \
+    conda create -n neuman_env python=3.8 -y && \
     conda activate neuman_env && \
-#    conda install pytorch==1.8.0 torchvision==0.9.0 cudatoolkit=10.2 -c pytorch && \
-    conda install -c pytorch pytorch=1.11 torchvision torchaudio cudatoolkit=11.3 && \
+    conda install -y pytorch==1.13.1 && \
+    pip install torchvision==0.14.1 && \
+    pip install torchaudio==0.13.1 && \
     conda install -c fvcore -c iopath -c conda-forge fvcore iopath && \
-    conda install -c bottler nvidiacub && \
-    conda install pytorch3d -c pytorch3d && \
-    conda install -c conda-forge igl && \
+    conda install -c bottler nvidiacub
+
+RUN . /root/.bashrc && \
+    conda activate neuman_env && \
+    pip install libigl && \
+    pip install --no-index --no-cache-dir pytorch3d -f https://dl.fbaipublicfiles.com/pytorch3d/packaging/wheels/py38_cu117_pyt1131/download.html && \
     pip install opencv-python joblib open3d imageio tensorboardX chumpy lpips scikit-image ipython matplotlib
