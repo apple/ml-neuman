@@ -66,8 +66,8 @@ def set_pe_option(parser):
     pe_opt.add_argument('--raw_dir_dim', type=int, default=3, help='dimension of direction')
     pe_opt.add_argument('--dir_max_freq', type=int, default=3, help='')
     pe_opt.add_argument('--dir_N_freqs', type=int, default=4, help='')
-    pe_opt.add_argument('--log_sampling', type=bool, default=True, help='')
-    pe_opt.add_argument('--include_input', type=bool, default=True, help='')
+    pe_opt.add_argument('--log_sampling', type=str2bool, default=True, help='')
+    pe_opt.add_argument('--include_input', type=str2bool, default=True, help='')
     pe_opt.add_argument('--can_posenc', type=str, default='rotate', help='rotate positional encoding for can space')
 
 
